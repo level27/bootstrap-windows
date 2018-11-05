@@ -1,6 +1,6 @@
 Write-Warning "Waiting for network to settle"
 
-Start-Sleep -Seconds 120
+#Start-Sleep -Seconds 120
 
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
