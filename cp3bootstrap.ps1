@@ -178,7 +178,11 @@ New-NetFirewallRule -DisplayName 'Windows Remote Management (HTTPS-In)' `
     -Direction Inbound -Action Allow `
     -Profile Any -LocalPort 5986 -Protocol TCP -RemoteAddress Any
 
+# Disable all unsave methods for WinRM - only allow client certificate authentication over HTTPS
 winrm delete winrm/config/Listener?Address=*+Transport=HTTP
+Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $false
+Set-Item -Path WSMan:\localhost\Service\Auth\Kerberos -Value $false
+Set-Item -Path WSMan:\localhost\Service\Auth\Negotiate -Value $false
 
 & C:\opscode\chef\bin\chef-client.bat -o l27wbase
 
