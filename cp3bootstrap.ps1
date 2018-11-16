@@ -1,7 +1,3 @@
-Write-Warning "Waiting for network to settle"
-
-#Start-Sleep -Seconds 120
-
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
     ForEach-Object {
@@ -14,7 +10,7 @@ function Get-NetworkConfig {
     }
 }
 
-Function Log-Message{
+Function Write-LogMessage{
     Param(
         [parameter(Mandatory=$false)]
         [switch]
@@ -75,7 +71,7 @@ Function Request-JSON {
             }
             $completed = $true
         } catch {
-            Log-Message -LogType WARNING -ToUser -Message "Request to $url failed. $_"
+            Write-LogMessage -LogType WARNING -ToUser -Message "Request to $url failed. $_"
             if ($retrycount -ge $Retries) {
                 Write-Error "Request to $url failed the maximum number of $retryCount times."
                 throw
@@ -91,7 +87,7 @@ Function Request-JSON {
     return ($response | ConvertFrom-Json )
 }
 
-Log-Message -LogType WARNING -ToUser -Message 'CP3 INSTALLATION PROCESS. DO NOT TOUCH YOUR SERVER UNTIL YOU SEE THE LOGIN PROMPT'
+Write-LogMessage -LogType WARNING -ToUser -Message 'CP3 INSTALLATION PROCESS. DO NOT TOUCH YOUR SERVER UNTIL YOU SEE THE LOGIN PROMPT'
 
 $NetworkInfo = Get-NetworkConfig
 
@@ -99,18 +95,18 @@ $NetworkInfo = Get-NetworkConfig
 $ip = ( $NetworkInfo.IP | Where-Object { $_ -match "\d{1,3}(\.\d{1,3}){3}" } ).tostring()
 $mac = $NetworkInfo.MAC.tostring()
 
-Log-Message -LogType INFO -ToUser -Message "IP = $ip"
-Log-Message -LogType INFO -ToUser -Message "Mac = $mac"
+Write-LogMessage -LogType INFO -ToUser -Message "IP = $ip"
+Write-LogMessage -LogType INFO -ToUser -Message "Mac = $mac"
 
 $baseurl = 'https://cp3.level27.be'
 if (($ip -like "172.21*") -or ($ip -like "172.30*")) {
 	$baseurl = 'http://cp3.yope.be'
 }
 
-Log-Message -LogType INFO -ToUser -Message "BaseURL = $baseurl"
+Write-LogMessage -LogType INFO -ToUser -Message "BaseURL = $baseurl"
 
 while (!((Invoke-WebRequest $baseurl -UseBasicParsing).StatusCode -eq 200)){
-    Log-Message -LogType WARNING -ToUser -Message "No valifd answer from $baseurl, waiting 5 seconds to try again"
+    Write-LogMessage -LogType WARNING -ToUser -Message "No valifd answer from $baseurl, waiting 5 seconds to try again"
     Start-Sleep 5
 }
 
@@ -120,12 +116,12 @@ $mac = [uri]::EscapeDataString($mac)
 
 $url = "$baseurl/mvc/project/autoinstall/bootstrap?cp3=awesome&ip=$ip&mac=$mac"
 
-Log-Message -LogType INFO -ToUser -Message "Announcing myself on $url"
+Write-LogMessage -LogType INFO -ToUser -Message "Announcing myself on $url"
 
 $result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url}
 
 if (-not ($result.success -eq "True")) {
-    Log-Message -LogType CRITICAL -ToUser -Message "No luck chuck"
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "No luck chuck"
     throw "KAPOT!"
 }else{
     $max_time = 3600 #600
@@ -134,7 +130,7 @@ if (-not ($result.success -eq "True")) {
     
 	while (($elapsed_time -lt $max_time) -and -not $done) {
 		if (($result.success -eq "True") -and $result.job_status -eq 10) {
-            Log-Message -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is waiting. Standing by."
+            Write-LogMessage -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is waiting. Standing by."
             
             $fqdn = $result.fqdn
             $hostname = $fqdn.split('.')[0]
@@ -142,17 +138,26 @@ if (-not ($result.success -eq "True")) {
             netdom renamecomputer $env:COMPUTERNAME /newname:"$hostname" /force | Out-Null
             netdom computername $env:COMPUTERNAME /add:"$fqdn" | Out-Null
             netdom computername $env:COMPUTERNAME /makeprimary:"$fqdn" | Out-Null
+
+            $cert = New-SelfSignedCertificate -DnsName $ip -CertStoreLocation cert:\LocalMachine\My
+            Invoke-Expression "winrm delete winrm/config/listener?Transport=HTTPS+Address=*" -ErrorAction SilentlyContinue
+            winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$hostname`";CertificateThumbprint=`"$($cert.ThumbPrint)`"}"
+            Set-Item -Path WSMan:\localhost\Service\Auth\Certificate -Value $true
+            New-NetFirewallRule -DisplayName 'Windows Remote Management (HTTPS-In)' `
+                -Name 'Windows Remote Management (HTTPS-In)' `
+                -Direction Inbound -Action Allow `
+                -Profile Any -LocalPort 5986 -Protocol TCP -RemoteAddress Any
 		}
 		elseif (($result.success -eq "True") -and ($result.job_status -eq 30)) {
-            Log-Message -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is busy now. Standing by."
+            Write-LogMessage -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is busy now. Standing by."
             
         }
 		elseif (($result.success -eq "True") -and ($result.job_status -eq  50)) {
-            Log-Message -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is done."
+            Write-LogMessage -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is done."
             $done = $true;
         }
 		else {
-            Log-Message -LogType CRITICAL -ToUser -Message "Someting bad happened: $($result.messages.global)"
+            Write-LogMessage -LogType CRITICAL -ToUser -Message "Someting bad happened: $($result.messages.global)"
             throw "KAPOT!"
         }
         
@@ -161,14 +166,16 @@ if (-not ($result.success -eq "True")) {
         $result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url} 
 	}
 	if (-not $done) {
-        Log-Message -LogType CRITICAL -ToUser -Message "Could not do the bootstrap! Server did not respond in time"
+        Write-LogMessage -LogType CRITICAL -ToUser -Message "Could not do the bootstrap! Server did not respond in time"
 	}
 }
+
+winrm delete winrm/config/Listener?Address=*+Transport=HTTP
 
 & C:\opscode\chef\bin\chef-client.bat -o l27wbase
 
 schtasks.exe /create /f /tn cp3networks /ru SYSTEM /sc ONSTART /tr "powershell.exe -executionpolicy remotesigned -command '. C:\L27\CP3\bin\Set-Networks.ps1 ; schtasks.exe /delete /f /tn cp3networks'"
 
-Log-Message -LogType INFO -ToUser -Message "Bootstrap done, requesting CP3 to reboot."
+Write-LogMessage -LogType INFO -ToUser -Message "Bootstrap done, requesting CP3 to reboot."
 $url = "$baseurl/mvc/project/autoinstall/reboot?cp3=awesome&mac=$mac"
 $result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url}
