@@ -139,7 +139,7 @@ if (-not ($result.success -eq "True")) {
             netdom computername $env:COMPUTERNAME /add:"$fqdn" | Out-Null
             netdom computername $env:COMPUTERNAME /makeprimary:"$fqdn" | Out-Null
 
-            $cert = New-SelfSignedCertificate -DnsName $ip -CertStoreLocation cert:\LocalMachine\My
+            $cert = New-SelfSignedCertificate -DnsName $hostname -CertStoreLocation cert:\LocalMachine\My
             Invoke-Expression "winrm delete winrm/config/listener?Transport=HTTPS+Address=*" -ErrorAction SilentlyContinue
             winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$hostname`";CertificateThumbprint=`"$($cert.ThumbPrint)`"}"
             Set-Item -Path WSMan:\localhost\Service\Auth\Certificate -Value $true
