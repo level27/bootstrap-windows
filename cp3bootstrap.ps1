@@ -1,3 +1,6 @@
+$global:hostname = ""
+$global:renamed = false
+
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
     ForEach-Object {
@@ -132,21 +135,17 @@ if (-not ($result.success -eq "True")) {
 		if (($result.success -eq "True") -and $result.job_status -eq 10) {
             Write-LogMessage -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is waiting. Standing by."
             
-            $fqdn = $result.fqdn
-            $hostname = $fqdn.split('.')[0]
+            if( !($global:renamed) ){
+                
+                $fqdn = $result.fqdn
+                $global:hostname = $fqdn.split('.')[0]
 
-            netdom renamecomputer $env:COMPUTERNAME /newname:"$hostname" /force | Out-Null
-            netdom computername $env:COMPUTERNAME /add:"$fqdn" | Out-Null
-            netdom computername $env:COMPUTERNAME /makeprimary:"$fqdn" | Out-Null
-
-            $cert = New-SelfSignedCertificate -DnsName $hostname -CertStoreLocation cert:\LocalMachine\My
-            Invoke-Expression "winrm delete winrm/config/listener?Transport=HTTPS+Address=*" -ErrorAction SilentlyContinue
-            winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$hostname`";CertificateThumbprint=`"$($cert.ThumbPrint)`"}"
-            Set-Item -Path WSMan:\localhost\Service\Auth\Certificate -Value $true
-            New-NetFirewallRule -DisplayName 'Windows Remote Management (HTTPS-In)' `
-                -Name 'Windows Remote Management (HTTPS-In)' `
-                -Direction Inbound -Action Allow `
-                -Profile Any -LocalPort 5986 -Protocol TCP -RemoteAddress Any
+                Write-LogMessage -LogType INFO -ToUser -Message "Renaming server to $hostname"
+                netdom renamecomputer $env:COMPUTERNAME /newname:"$hostname" /force | Out-Null
+                netdom computername $env:COMPUTERNAME /add:"$fqdn" | Out-Null
+                netdom computername $env:COMPUTERNAME /makeprimary:"$fqdn" | Out-Null
+                $global:renamed = true
+            }
 		}
 		elseif (($result.success -eq "True") -and ($result.job_status -eq 30)) {
             Write-LogMessage -LogType INFO -ToUser -Message "Server said `"$($result.messages.global)`".  Job is busy now. Standing by."
@@ -169,6 +168,15 @@ if (-not ($result.success -eq "True")) {
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Could not do the bootstrap! Server did not respond in time"
 	}
 }
+
+$cert = New-SelfSignedCertificate -DnsName $global:hostname -CertStoreLocation cert:\LocalMachine\My
+Invoke-Expression "winrm delete winrm/config/listener?Transport=HTTPS+Address=*" -ErrorAction SilentlyContinue
+winrm create winrm/config/Listener?Address=*+Transport=HTTPS "@{Hostname=`"$($global:hostname)`";CertificateThumbprint=`"$($cert.ThumbPrint)`"}"
+Set-Item -Path WSMan:\localhost\Service\Auth\Certificate -Value $true
+New-NetFirewallRule -DisplayName 'Windows Remote Management (HTTPS-In)' `
+    -Name 'Windows Remote Management (HTTPS-In)' `
+    -Direction Inbound -Action Allow `
+    -Profile Any -LocalPort 5986 -Protocol TCP -RemoteAddress Any
 
 winrm delete winrm/config/Listener?Address=*+Transport=HTTP
 
