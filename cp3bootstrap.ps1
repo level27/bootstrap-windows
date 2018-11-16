@@ -182,7 +182,7 @@ New-NetFirewallRule -DisplayName 'Windows Remote Management (HTTPS-In)' `
 winrm delete winrm/config/Listener?Address=*+Transport=HTTP
 Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $false
 Set-Item -Path WSMan:\localhost\Service\Auth\Kerberos -Value $false
-Set-Item -Path WSMan:\localhost\Service\Auth\Negotiate -Value $false
+#Set-Item -Path WSMan:\localhost\Service\Auth\Negotiate -Value $false
 
 & C:\opscode\chef\bin\chef-client.bat -o l27wbase
 
