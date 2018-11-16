@@ -1,5 +1,5 @@
 $global:hostname = ""
-$global:renamed = false
+$global:renamed = $false
 
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
@@ -144,7 +144,7 @@ if (-not ($result.success -eq "True")) {
                 netdom renamecomputer $env:COMPUTERNAME /newname:"$hostname" /force | Out-Null
                 netdom computername $env:COMPUTERNAME /add:"$fqdn" | Out-Null
                 netdom computername $env:COMPUTERNAME /makeprimary:"$fqdn" | Out-Null
-                $global:renamed = true
+                $global:renamed = $true
             }
 		}
 		elseif (($result.success -eq "True") -and ($result.job_status -eq 30)) {
