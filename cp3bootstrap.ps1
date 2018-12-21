@@ -31,8 +31,7 @@ Function Write-LogMessage{
     $logFile = "C:\Temp\cp3bootstrap.log"
 
     if(-not (Test-Path $logFile)){
-        New-Item -ItemType Directory -Path C:\ -Name Temp -Force | Out-Null
-        New-Item -ItemType File -Path C:\Temp -Name cp3bootstrap.log -Force  | Out-Null
+        New-Item -ItemType File $logFile -Force  | Out-Null
     }
 
     if($ToUser){
