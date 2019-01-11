@@ -46,6 +46,7 @@ Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $apihost (POST: systems/import)"
 
 try{
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/import" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
     Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
@@ -53,15 +54,16 @@ try{
     throw $_
 }
 
-Write-LogMessage -LogType INFO -Message "Result: $($data.system), Exitcode: $LASTEXITCODE"
+Write-LogMessage -LogType INFO -Message "Result: $($data.system)"
 
 $systemID = $data.system.id
 $systemUID = $data.system.uid
 $systemStatus = $data.system.status
 
 #Wait for CP4 to create the system
-Start-Sleep -s 1
+Start-Sleep -Seconds 3
 try{
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
     Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
@@ -69,7 +71,7 @@ try{
     throw $_
 }
 
-Write-LogMessage -LogType INFO -Message "Result: $($data.system), Exitcode: $LASTEXITCODE"
+Write-LogMessage -LogType INFO -Message "Result: $($data.system)"
 
 $systemStatus = $data.system.status
 $queueToken = $data.system.token
@@ -92,12 +94,12 @@ if($systemStatus -eq "importing"){
     }
     
     #setup chef
-    New-Item -Path C:\Chef -Name client.pem -Value $chefClientKey -ItemType File
+    New-Item C:\Chef\client.pem -Value $chefClientKey -ItemType File -Force
 
-    New-Item -Path C:\Chef -Name client.rb -ItemType File -Value @"
+    New-Item C:\Chef\client.rb -ItemType File -Value @"
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
-"@ | Out-Null
+"@ -Force | Out-Null
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Value @"
 {
@@ -108,8 +110,10 @@ node_name "$systemUID"
 		"system_api": "http://$APIHost"
 	}
 }
-"@ | Out-Null
-Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
+"@ -Force | Out-Null
+
+    Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
+    Start-Sleep -Seconds 2
     try{
         & C:\opscode\chef\bin\chef-client.bat -j C:\chef\firstboot.json -o l27wcp4
     }catch{
@@ -121,7 +125,9 @@ Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
     #report import done
     $payload = "{`"status`":`"done`"}"
     try{
+        Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+        Write-LogMessage -ToUser -LogType INFO -Message "Done: $($data)"
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         Write-LogMessage -LogType CRITICAL -Message "Exit"
