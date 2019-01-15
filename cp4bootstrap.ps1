@@ -39,8 +39,11 @@ $token = $args[1]
 $APIHost = "api.cp4dev.be"
 $chefendpoint = "https://chef.cp4dev.be/organizations/level27"
 $hostname = $env:COMPUTERNAME
-$payload = "{`"organisation`":$organisationID,`"name`":`"$hostname`"}"
-$headers = @{Authorization=$token}
+$payload = @{
+    "organisation" = $organisationID
+    "name" = $hostname
+} | ConvertTo-Json
+$headers = @{"Authorization" = $token}
 
 Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $apihost (POST: systems/import)"
@@ -122,8 +125,14 @@ node_name "$systemUID"
         throw $_
     }
 
+    while ((Get-Service 'CP4Worker').status -ne "Running"){
+        Start-Sleep -Seconds 1
+        Write-LogMessage -ToUser -LogType INFO -Message "Wairing for CP4Worker to start"
+    }
+
+    Start-Sleep -Seconds 3
     #report import done
-    $payload = "{`"status`":`"done`"}"
+    $payload = @{"status" = "done"} | ConvertTo-Json
     try{
         Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
