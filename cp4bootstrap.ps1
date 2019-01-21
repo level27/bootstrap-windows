@@ -127,7 +127,7 @@ node_name "$systemUID"
 
     while ((Get-Service 'CP4Worker').status -ne "Running"){
         Start-Sleep -Seconds 1
-        Write-LogMessage -ToUser -LogType INFO -Message "Wairing for CP4Worker to start"
+        Write-LogMessage -ToUser -LogType INFO -Message "Waiting for CP4Worker to start"
     }
 
     Start-Sleep -Seconds 3
