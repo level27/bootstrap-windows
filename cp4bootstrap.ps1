@@ -118,7 +118,7 @@ node_name "$systemUID"
     Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
     Start-Sleep -Seconds 2
     try{
-        & C:\opscode\chef\bin\chef-client.bat -j C:\chef\firstboot.json -o l27wcp4
+        & C:\opscode\chef\bin\chef-client.bat -j C:\chef\firstboot.json -o l27cp4_w
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef run failed"
         Write-LogMessage -LogType CRITICAL -Message "Exit"
@@ -130,7 +130,7 @@ node_name "$systemUID"
         Write-LogMessage -ToUser -LogType INFO -Message "Waiting for CP4Worker to start"
     }
 
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 30
     #report import done
     $payload = @{"status" = "done"} | ConvertTo-Json
     try{
