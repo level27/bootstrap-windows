@@ -118,7 +118,7 @@ node_name "$systemUID"
     Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
     Start-Sleep -Seconds 2
     try{
-        & C:\opscode\chef\bin\chef-client.bat -j C:\chef\firstboot.json -o l27cp4_w
+        & C:\opscode\chef\bin\chef-client.bat -j C:\chef\firstboot.json -o l27wcp4
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef run failed"
         Write-LogMessage -LogType CRITICAL -Message "Exit"
