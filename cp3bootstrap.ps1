@@ -67,7 +67,7 @@ Function Request-JSON {
 
     while (-not $completed) {
         try {
-            $response = Invoke-Command $cmd -ArgumentList $Params 
+            $response = Invoke-Command $cmd #-ArgumentList $Params 
             if ($response.StatusCode -ne 200) {
                 Write-Warning "Expecting reponse code 200, was: $($response.StatusCode)"
                 throw "Expecting reponse code 200, was: $($response.StatusCode)"
