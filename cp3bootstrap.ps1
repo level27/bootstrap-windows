@@ -55,10 +55,11 @@ Function Request-JSON {
     )
 
     $Params.Add('UserAgent', 'WinCP3Bootstrap')
+    $Params.Add('UseBasicParsing', $true)
 
     $url = $Params['Uri']
 
-    $cmd = { Invoke-WebRequest -UseBasicParsing @Params }
+    $cmd = { Invoke-WebRequest @Params }
 
     $retryCount = 0
     $completed = $false
@@ -120,7 +121,7 @@ $url = "$baseurl/mvc/project/autoinstall/bootstrap?cp3=awesome&ip=$ip&mac=$mac"
 
 Write-LogMessage -LogType INFO -ToUser -Message "Announcing myself on $url"
 
-$result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url}
+$result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url;}
 
 if (-not ($result.success -eq "True")) {
     Write-LogMessage -LogType CRITICAL -ToUser -Message "No luck chuck"
@@ -189,4 +190,4 @@ schtasks.exe /create /f /tn cp3networks /ru SYSTEM /sc ONSTART /tr "powershell.e
 
 Write-LogMessage -LogType INFO -ToUser -Message "Bootstrap done, requesting CP3 to reboot."
 $url = "$baseurl/mvc/project/autoinstall/reboot?cp3=awesome&mac=$mac"
-$result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url}
+$result = Request-JSON -Params @{'Method'='GET'; 'Uri' =$url;}
