@@ -58,7 +58,7 @@ Function Request-JSON {
 
     $url = $Params['Uri']
 
-    $cmd = { Invoke-WebRequest @Params }
+    $cmd = { Invoke-WebRequest -UseBasicParsing @Params }
 
     $retryCount = 0
     $completed = $false
@@ -66,7 +66,7 @@ Function Request-JSON {
 
     while (-not $completed) {
         try {
-            $response = Invoke-Command $cmd -ArgumentList $Params -UseBasicParsing
+            $response = Invoke-Command $cmd -ArgumentList $Params 
             if ($response.StatusCode -ne 200) {
                 Write-Warning "Expecting reponse code 200, was: $($response.StatusCode)"
                 throw "Expecting reponse code 200, was: $($response.StatusCode)"
