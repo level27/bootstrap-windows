@@ -1,6 +1,18 @@
 $global:hostname = ""
 $global:renamed = $false
 
+Push-Location
+Set-Location HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers
+Set-ItemProperty . 0 "be.pool.ntp.org"
+Set-ItemProperty . "(Default)" "0"
+Set-Location HKLM:\SYSTEM\CurrentControlSet\services\W32Time\Parameters
+Set-ItemProperty . NtpServer "be.pool.ntp.org"
+Pop-Location
+Stop-Service w32time
+Start-Service w32time
+
+Invoke-Command { W32tm /resync /force }
+
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
     ForEach-Object {
