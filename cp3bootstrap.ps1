@@ -13,7 +13,7 @@ Start-Service w32time
 
 Invoke-Command { W32tm /resync /force }
 
-Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+netsh advfirewall firewall add rule name="WinRM" dir=in action=allow protocol=tcp localport=5985
 
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
@@ -201,8 +201,6 @@ Set-Item -Path WSMan:\localhost\Service\Auth\Kerberos -Value $false
 & C:\opscode\chef\bin\chef-client.bat -o l27wbase
 
 schtasks.exe /create /f /tn cp3networks /ru SYSTEM /sc ONSTART /tr "powershell.exe -executionpolicy remotesigned -command '. C:\L27\CP3\bin\Set-Networks.ps1 ; schtasks.exe /delete /f /tn cp3networks'"
-
-Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
 
 Write-LogMessage -LogType INFO -ToUser -Message "Bootstrap done, requesting CP3 to reboot."
 $url = "$baseurl/mvc/project/autoinstall/reboot?cp3=awesome&mac=$mac"
