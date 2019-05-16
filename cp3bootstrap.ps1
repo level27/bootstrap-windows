@@ -13,8 +13,6 @@ Start-Service w32time
 
 Invoke-Command { W32tm /resync /force }
 
-netsh advfirewall firewall add rule name="WinRM" dir=in action=allow protocol=tcp localport=5985
-
 function Get-NetworkConfig {
     Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
     ForEach-Object {
