@@ -36,8 +36,8 @@ Function Write-LogMessage{
 $organisationID = $args[0]
 $token = $args[1]
 
-$APIHost = "api.cp4dev.be"
-$chefendpoint = "https://chef.cp4dev.be/organizations/level27"
+$APIHost='api.level27.eu'
+$chefendpoint='https://chef.level27.eu/organizations/level27'
 $hostname = $env:COMPUTERNAME
 $payload = @{
     "organisation" = $organisationID
