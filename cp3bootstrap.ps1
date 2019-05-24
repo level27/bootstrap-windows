@@ -1,5 +1,6 @@
 $global:hostname = ""
 $global:renamed = $false
+$ErrorActionPreference = "Continue"
 
 Push-Location
 Set-Location HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers
@@ -198,7 +199,7 @@ Set-Item -Path WSMan:\localhost\Service\Auth\Kerberos -Value $false
 try{
 & C:\opscode\chef\bin\chef-client.bat -o l27wbase
 }catch{
-    
+
 }
 
 schtasks.exe /create /f /tn cp3networks /ru SYSTEM /sc ONSTART /tr "powershell.exe -executionpolicy remotesigned -command '. C:\L27\CP3\bin\Set-Networks.ps1 ; schtasks.exe /delete /f /tn cp3networks'"
