@@ -52,7 +52,7 @@ try{
     Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/import" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"htps://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     Write-LogMessage -LogType CRITICAL -Message "Exit"
     throw $_
 }
@@ -66,7 +66,7 @@ $systemStatus = $data.system.status
 #Wait for CP4 to create the system
 Start-Sleep -Seconds 3
 try{
-    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"htps://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
     Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
@@ -102,6 +102,7 @@ if($systemStatus -eq "importing"){
     New-Item C:\Chef\client.rb -ItemType File -Value @"
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
+chef_license 'accept'
 "@ -Force | Out-Null
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Value @"
@@ -110,7 +111,7 @@ node_name "$systemUID"
 		"system_uid": "$systemUID",
 		"system_token": "$queueToken",
 		"system_queue": "$chefQueue",
-		"system_api": "htps://$APIHost"
+		"system_api": "https://$APIHost"
 	}
 }
 "@ -Force | Out-Null
@@ -134,11 +135,11 @@ node_name "$systemUID"
     #report import done
     $payload = @{"status" = "done"} | ConvertTo-Json
     try{
-        Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"htps://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-        $data = Invoke-RestMethod -Uri "htps://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+        Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+        $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
         Write-LogMessage -ToUser -LogType INFO -Message "Done: $($data)"
     }catch{
-        Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"htps://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+        Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         Write-LogMessage -LogType CRITICAL -Message "Exit"
         throw $_
     }
