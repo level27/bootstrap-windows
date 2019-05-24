@@ -195,8 +195,11 @@ winrm delete winrm/config/Listener?Address=*+Transport=HTTP
 Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $false
 Set-Item -Path WSMan:\localhost\Service\Auth\Kerberos -Value $false
 #Set-Item -Path WSMan:\localhost\Service\Auth\Negotiate -Value $false
-
+try{
 & C:\opscode\chef\bin\chef-client.bat -o l27wbase
+}catch{
+    
+}
 
 schtasks.exe /create /f /tn cp3networks /ru SYSTEM /sc ONSTART /tr "powershell.exe -executionpolicy remotesigned -command '. C:\L27\CP3\bin\Set-Networks.ps1 ; schtasks.exe /delete /f /tn cp3networks'"
 
