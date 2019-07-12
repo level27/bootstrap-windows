@@ -102,6 +102,7 @@ if($systemStatus -eq "importing"){
     New-Item C:\Chef\client.rb -ItemType File -Value @"
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
+chef_license 'accept'
 "@ -Force | Out-Null
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Value @"

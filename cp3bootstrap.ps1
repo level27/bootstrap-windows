@@ -197,7 +197,7 @@ Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $false
 Set-Item -Path WSMan:\localhost\Service\Auth\Kerberos -Value $false
 #Set-Item -Path WSMan:\localhost\Service\Auth\Negotiate -Value $false
 try{
-& C:\opscode\chef\bin\chef-client.bat -o l27wbase
+    & C:\opscode\chef\bin\chef-client.bat -o l27wbase
 }catch{
 
 }
