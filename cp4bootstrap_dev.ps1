@@ -99,13 +99,13 @@ if($systemStatus -eq "importing"){
     #setup chef
     New-Item C:\Chef\client.pem -Value $chefClientKey -ItemType File -Force
 
-    New-Item C:\Chef\client.rb -ItemType File -Value @"
+    New-Item C:\Chef\client.rb -ItemType File -Force -Value @"
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
 chef_license 'accept'
 "@ -Force | Out-Null
 
-    New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Value @"
+    New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
 {
     "l27wcp4": {
 		"system_uid": "$systemUID",
@@ -131,7 +131,7 @@ chef_license 'accept'
         Write-LogMessage -ToUser -LogType INFO -Message "Waiting for CP4Worker to start"
     }
 
-    Start-Sleep -Seconds 30
+    Start-Sleep -Seconds 10
     #report import done
     $payload = @{"status" = "done"} | ConvertTo-Json
     try{
