@@ -103,18 +103,18 @@ if($systemStatus -eq "importing"){
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
 chef_license 'accept'
-"@ -Force | Out-Null
+"@ | Out-Null
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
 {
-    "l27wcp4": {
+    "l27cp4": {
 		"system_uid": "$systemUID",
 		"system_token": "$queueToken",
 		"system_queue": "$chefQueue",
 		"system_api": "https://$APIHost"
 	}
 }
-"@ -Force | Out-Null
+"@ | Out-Null
 
     Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
     Start-Sleep -Seconds 2
@@ -137,7 +137,7 @@ chef_license 'accept'
     try{
         Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
-        Write-LogMessage -ToUser -LogType INFO -Message "Done: $($data)"
+        Write-LogMessage -ToUser -LogType INFO -Message "Done: $($data.system)"
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         Write-LogMessage -LogType CRITICAL -Message "Exit"
