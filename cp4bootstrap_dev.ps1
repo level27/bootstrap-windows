@@ -49,10 +49,10 @@ Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $apihost (POST: systems/import)"
 
 try{
-    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-    $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/import" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/import" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/import`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     Write-LogMessage -LogType CRITICAL -Message "Exit"
     throw $_
 }
@@ -66,10 +66,10 @@ $systemStatus = $data.system.status
 #Wait for CP4 to create the system
 Start-Sleep -Seconds 3
 try{
-    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-    $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     Write-LogMessage -LogType CRITICAL -Message "Exit"
     throw $_
 }
@@ -103,7 +103,7 @@ if($systemStatus -eq "importing"){
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
 chef_license 'accept'
-"@ -Force | Out-Null
+"@ | Out-Null
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
 {
@@ -111,10 +111,10 @@ chef_license 'accept'
 		"system_uid": "$systemUID",
 		"system_token": "$queueToken",
 		"system_queue": "$chefQueue",
-		"system_api": "http://$APIHost"
+		"system_api": "https://$APIHost"
 	}
 }
-"@ -Force | Out-Null
+"@ | Out-Null
 
     Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
     Start-Sleep -Seconds 2
@@ -135,11 +135,11 @@ chef_license 'accept'
     #report import done
     $payload = @{"status" = "done"} | ConvertTo-Json
     try{
-        Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-        $data = Invoke-RestMethod -Uri "http://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+        Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+        $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/importdone" -Method Post -Body $payload -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
         Write-LogMessage -ToUser -LogType INFO -Message "Done: $($data)"
     }catch{
-        Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"http://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+        Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/importdone`" -Method Post -Body $payload -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         Write-LogMessage -LogType CRITICAL -Message "Exit"
         throw $_
     }
