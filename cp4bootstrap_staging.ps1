@@ -65,6 +65,18 @@ $systemStatus = $data.system.status
 
 #Wait for CP4 to create the system
 Start-Sleep -Seconds 3
+
+try{
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+}catch{
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -Message "Exit"
+    throw $_
+}
+
+$systemFQDN = $data.system.fqdn
+
 try{
     Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
@@ -107,6 +119,9 @@ chef_license 'accept'
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
 {
+    "system":{
+        "fqdn: "$systemFQDN"
+    }
     "l27cp4": {
 		"system_uid": "$systemUID",
 		"system_token": "$queueToken",
