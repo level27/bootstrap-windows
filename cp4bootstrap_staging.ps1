@@ -120,7 +120,7 @@ chef_license 'accept'
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
 {
     "system":{
-        "fqdn: "$systemFQDN"
+        "fqdn": "$systemFQDN"
     }
     "l27cp4": {
 		"system_uid": "$systemUID",
