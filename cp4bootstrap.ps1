@@ -65,6 +65,18 @@ $systemStatus = $data.system.status
 
 #Wait for CP4 to create the system
 Start-Sleep -Seconds 3
+
+try{
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+}catch{
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -Message "Exit"
+    throw $_
+}
+
+$systemFQDN = $data.system.fqdn
+
 try{
     Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
@@ -88,7 +100,7 @@ if($systemStatus -eq "importing"){
     try{
         #install Chef
         Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
-        . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install
+        . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 16.1
         Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
@@ -107,6 +119,9 @@ chef_license 'accept'
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
 {
+    "system": {
+        "fqdn": "$systemFQDN"
+    },
     "l27cp4": {
 		"system_uid": "$systemUID",
 		"system_token": "$queueToken",
