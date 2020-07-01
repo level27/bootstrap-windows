@@ -121,7 +121,7 @@ chef_license 'accept'
 {
     "system":{
         "fqdn": "$systemFQDN"
-    }
+    },
     "l27cp4": {
 		"system_uid": "$systemUID",
 		"system_token": "$queueToken",
