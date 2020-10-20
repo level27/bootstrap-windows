@@ -74,14 +74,25 @@ try{
     Write-LogMessage -LogType CRITICAL -Message "Exit"
     throw $_
 }
-
 $systemFQDN = $data.system.fqdn
-$queueToken = ""
-$chefClientKey = ""
-$chefQueue = ""
+
+try{
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+}catch{
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -Message "Exit"
+    throw $_
+}
+
+$systemStatus = $data.system.status
+$queueToken = $data.system.token
+$chefClientKey = $data.system.chefClientKey
+$chefQueue = $data.system.chefQueue
 $retry = 0
 
 while((($queueToken -eq "") -or ($chefClientKey = "") -or ($chefQueue = "")) -and ($retry -lt 10)){
+    Write-LogMessage -LogType INFO -Message "Try: $($retry + 1)"
     try{
         Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
