@@ -76,23 +76,38 @@ try{
 }
 
 $systemFQDN = $data.system.fqdn
+$queueToken = ""
+$chefClientKey = ""
+$chefQueue = ""
+$retry = 0
 
-try{
-    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
-}catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+while(($queueToken -eq "" || $chefClientKey = "" || $chefQueue = "") && $retry < 10){
+    try{
+        Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+        $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+    }catch{
+        Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+        Write-LogMessage -LogType CRITICAL -Message "Exit"
+        throw $_
+    }
+
+    Write-LogMessage -LogType INFO -Message "Result: $($data.system)"
+
+    $systemStatus = $data.system.status
+    $queueToken = $data.system.token
+    $chefClientKey = $data.system.chefClientKey
+    $chefQueue = $data.system.chefQueue
+    #$chefAPI = $data.system.chefApi
+
+    Start-Sleep -Seconds 15
+    $retry++
+}
+
+if ($retry -eq 10){
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "We tried 10 times to get details, we quit now."
     Write-LogMessage -LogType CRITICAL -Message "Exit"
     throw $_
 }
-
-Write-LogMessage -LogType INFO -Message "Result: $($data.system)"
-
-$systemStatus = $data.system.status
-$queueToken = $data.system.token
-$chefClientKey = $data.system.chefClientKey
-$chefQueue = $data.system.chefQueue
-#$chefAPI = $data.system.chefApi
 
 if($systemStatus -eq "importing"){
     Write-LogMessage -LogType INFO -Message "Importing" -ToUser
