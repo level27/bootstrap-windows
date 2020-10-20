@@ -81,7 +81,7 @@ $chefClientKey = ""
 $chefQueue = ""
 $retry = 0
 
-while(($queueToken -eq "" -or $chefClientKey = "" -or $chefQueue = "") -and $retry -lt 10){
+while((($queueToken -eq "") -or ($chefClientKey = "") -or ($chefQueue = "")) -and ($retry -lt 10)){
     try{
         Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
