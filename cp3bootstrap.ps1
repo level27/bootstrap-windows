@@ -104,6 +104,7 @@ Function Request-JSON {
 }
 
 Write-LogMessage -LogType WARNING -ToUser -Message 'CP3 INSTALLATION PROCESS. DO NOT TOUCH YOUR SERVER UNTIL YOU SEE THE LOGIN PROMPT'
+Start-Sleep -Seconds 30
 
 $NetworkInfo = Get-NetworkConfig
 

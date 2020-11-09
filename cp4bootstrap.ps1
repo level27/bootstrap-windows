@@ -85,14 +85,16 @@ try{
     throw $_
 }
 
+Write-LogMessage -LogType INFO -Message "Result: $($data.system)"
+
 $systemStatus = $data.system.status
 $queueToken = $data.system.token
 $chefClientKey = $data.system.chefClientKey
 $chefQueue = $data.system.chefQueue
 $retry = 0
 
-while((($queueToken -eq "") -or ($chefClientKey = "") -or ($chefQueue = "")) -and ($retry -lt 10)){
-    Write-LogMessage -LogType INFO -Message "Try: $($retry + 1)"
+while((($queueToken -eq $null) -or ($chefClientKey -eq $null) -or ($chefQueue -eq $null)) -and ($retry -lt 10)){
+    Write-LogMessage -LogType INFO -Message -ToUser "Try: $($retry + 1)"
     try{
         Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/$systemID/import`" -Method Get -Headers $headers -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
         $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/$systemID/import" -Method Get -Headers $headers -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
