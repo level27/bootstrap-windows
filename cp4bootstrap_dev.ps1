@@ -38,7 +38,7 @@ $token = $args[1]
 
 $APIHost = "api.cp4dev.be"
 $chefendpoint = "https://chef.cp4dev.be/organizations/level27"
-$hostname = $env:COMPUTERNAME
+$hostname = ($env:COMPUTERNAME).ToLower()
 $payload = @{
     "organisation" = $organisationID
     "name" = $hostname

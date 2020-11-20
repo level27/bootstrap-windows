@@ -38,7 +38,7 @@ $token = $args[1]
 
 $APIHost='api.level27.eu'
 $chefendpoint='https://chef.level27.eu/organizations/level27'
-$hostname = $env:COMPUTERNAME
+$hostname = ($env:COMPUTERNAME).ToLower()
 $payload = @{
     "organisation" = $organisationID
     "name" = $hostname
