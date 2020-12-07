@@ -128,6 +128,8 @@ while (!((Invoke-WebRequest $baseurl -UseBasicParsing).StatusCode -eq 200)){
 }
 
 #Announce and Bootstrap
+[Environment]::SetEnvironmentVariable("CHEF_LICENSE", 'accept', 'Machine')
+
 $ip = [uri]::EscapeDataString($ip)
 $mac = [uri]::EscapeDataString($mac)
 
