@@ -92,7 +92,7 @@ $payload = @{
   "token" = $queueToken
 }
 
-Write-LogMessage -LogType INFO -Message "$payload"
+Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $($payload.mac) and secret token"
 
 try{
     Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
