@@ -92,11 +92,13 @@ $payload = @{
   "token" = $queueToken
 }
 
+Write-LogMessage -LogType INFO -Message "$payload"
+
 try{
     Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/autoinstall" -Method Post -Body $payload -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
 }catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/import`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     Write-LogMessage -LogType CRITICAL -Message "Exit"
     throw $_
 }
