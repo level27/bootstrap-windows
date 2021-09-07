@@ -90,7 +90,7 @@ Write-LogMessage -LogType INFO -Message "L27 init $APIHost (POST: systems/autoin
 $payload = @{
   "mac"   = $mac
   "token" = $queueToken
-}
+} | ConvertTo-Json
 
 Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $($payload.mac) and secret token"
 
