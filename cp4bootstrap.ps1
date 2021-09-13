@@ -103,10 +103,10 @@ try{
     throw $_
 }
 
-Write-LogMessage -LogType INFO -Message "Result: $($data.system)"
+Write-LogMessage -LogType INFO -Message "Result: $($data)"
 
-$systemUID = $data.system.uid
-$chefClientKey = $data.system.chefClientKey
+$systemUID = $data.uid
+$chefClientKey = $data.chefClientKey
 
 #Wait for CP4 to create the system
 Start-Sleep -Seconds 3
