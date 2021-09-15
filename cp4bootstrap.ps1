@@ -80,6 +80,9 @@ Function Write-LogMessage{
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
+# Stop cp4worker that was installed in the build
+Get-Service cp4worker -Erroraction SilenlyContinue | Stop-Service
+
 # Get MAC address
 $NetworkInfo = Get-NetworkConfig
 $mac = $NetworkInfo.MAC.tostring()
