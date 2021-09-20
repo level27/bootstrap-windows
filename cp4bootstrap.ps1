@@ -59,7 +59,7 @@ Function Write-LogMessage{
 
   $time = Get-Date -Format u
   $data = "$time : $LogType - $Message"
-  $logFile = "C:\Temp\cp4bootstrap.log"
+  $logFile = "$($env:TEMP )\cp4bootstrap.log"
 
   if(-not (Test-Path $logFile)){
     New-Item -ItemType File $logFile -Force  | Out-Null
@@ -111,6 +111,7 @@ Function Send-AutoinstallFeedback{
 }
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
+Write-LogMessage -LogType INFO -ToUser -Message "Starting CP4 bootstrap"
 # Stop cp4worker that was installed in the build
 Get-Service cp4worker -Erroraction SilenlyContinue | Stop-Service
 
