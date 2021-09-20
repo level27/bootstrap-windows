@@ -100,7 +100,7 @@ Function Send-AutoinstallFeedback{
     }
   }else{
     @{
-      "mac"   = $mac
+      "mac"   = $MacAddress
       "result" = $Success
     }
   }
