@@ -97,6 +97,7 @@ Function Send-AutoinstallFeedback{
     @{
       "mac"   = $MacAddress
       "token" = $Token
+      "result" = $true
     }
   }else{
     @{
