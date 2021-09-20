@@ -121,9 +121,9 @@ $mac = $NetworkInfo.MAC.tostring()
 
 Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $APIHost (POST: systems/autoinstall)"
-Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $($payload.mac) and secret token"
+Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $mac and secret token"
 
-$data = Send-AutoinstallFeedback -MacAddress $mac -Token $token -Success $true
+$data = Send-AutoinstallFeedback -MacAddress $mac -Token $queueToken -Success $true
 
 Write-LogMessage -LogType INFO -Message "Result: $($data)"
 
