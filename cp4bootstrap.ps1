@@ -113,7 +113,7 @@ Function Send-AutoinstallFeedback{
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 Write-LogMessage -LogType INFO -ToUser -Message "Starting CP4 bootstrap"
 # Stop cp4worker that was installed in the build
-Get-Service cp4worker -Erroraction SilenlyContinue | Stop-Service
+Get-Service cp4worker -Erroraction SilentlyContinue | Stop-Service
 
 # Get MAC address
 $NetworkInfo = Get-NetworkConfig
