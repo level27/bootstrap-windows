@@ -79,36 +79,27 @@ Function Write-LogMessage{
 
 Function Send-AutoinstallFeedback{
   Param(
+    [parameter(Mandatory=$true)]
+    [string]
+    $MacAddress,
     [parameter(Mandatory=$false)]
-    [switch]
-    $Initial = $false,
-    [parameter(Mandatory=$false)]
+    [string]
+    $Token = "",
+    [parameter(Mandatory=$true)]
     [bool]
-    $Success = $false,
-    [parameter(Mandatory=$false)]
-    [string]
-    $MacAddress = $false,
-    [parameter(Mandatory=$false)]
-    [string]
-    $Token = $false
+    $Success
   )
 
-  $payload = if($Initial){
+  $payload = 
     @{
       "mac"   = $MacAddress
       "token" = $Token
-      "result" = $true
-    }
-  }else{
-    @{
-      "mac"   = $MacAddress
       "result" = $Success
-    }
-  }
+    } | ConvertTo-Json
 
   # Let CP4 know the status of the autoinstall
   try{
-    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $($payload | ConvertTo-Json) -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
     $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/autoinstall" -Method Post -Body $payload -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
   }catch{
     Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
@@ -131,7 +122,7 @@ Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $APIHost (POST: systems/autoinstall)"
 Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $($payload.mac) and secret token"
 
-$data = Send-AutoinstallFeedback -Initial -MacAddress $mac -Token $token
+$data = Send-AutoinstallFeedback -MacAddress $mac -Token $token -Success $true
 
 Write-LogMessage -LogType INFO -Message "Result: $($data)"
 
