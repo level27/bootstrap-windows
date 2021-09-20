@@ -31,6 +31,7 @@ $APIHost      = $env:L27_API_HOST
 $chefendpoint = $env:L27_CHEF_HOST
 $systemQueue  = $env:L27_Q_HOST
 
+#-----------------------------------------------------------[Functions]------------------------------------------------------------
 function Get-NetworkConfig {
   Get-WmiObject Win32_NetworkAdapter -Filter 'NetConnectionStatus=2' |
   ForEach-Object {
@@ -43,43 +44,81 @@ function Get-NetworkConfig {
   }
 }
 
-#-----------------------------------------------------------[Functions]------------------------------------------------------------
-
 Function Write-LogMessage{
-    Param(
-        [parameter(Mandatory=$false)]
-        [switch]
-        $ToUser = $false,
-        [parameter(Mandatory=$true)]
-        [String]
-        $Message,
-        [Parameter(mandatory=$true)]
-        [ValidateSet('INFO', 'WARNING', 'CRITICAL')]
-        $LogType
-    )
+  Param(
+    [parameter(Mandatory=$false)]
+    [switch]
+    $ToUser = $false,
+    [parameter(Mandatory=$true)]
+    [String]
+    $Message,
+    [Parameter(mandatory=$true)]
+    [ValidateSet('INFO', 'WARNING', 'CRITICAL')]
+    $LogType
+  )
 
-    $time = Get-Date -Format u
-    $data = "$time : $LogType - $Message"
-    $logFile = "C:\Temp\cp4bootstrap.log"
+  $time = Get-Date -Format u
+  $data = "$time : $LogType - $Message"
+  $logFile = "C:\Temp\cp4bootstrap.log"
 
-    if(-not (Test-Path $logFile)){
-        New-Item -ItemType File $logFile -Force  | Out-Null
+  if(-not (Test-Path $logFile)){
+    New-Item -ItemType File $logFile -Force  | Out-Null
+  }
+
+  if($ToUser){
+    $color = switch ($LogType)
+    {
+      'INFO'      { "white"   }
+      'WARNING'   { "yellow"  }
+      'CRITICAL'  { "red"     }
     }
+    Write-Host $data -ForegroundColor $color 
+  }
+  Add-Content -Path $logFile -Value $data
+}
 
-    if($ToUser){
-        $color = switch ($LogType)
-        {
-            'INFO'      { "white"   }
-            'WARNING'   { "yellow"  }
-            'CRITICAL'  { "red"     }
-        }
-        Write-Host $data -ForegroundColor $color 
+Function Send-AutoinstallFeedback{
+  Param(
+    [parameter(Mandatory=$false)]
+    [switch]
+    $Initial = $false,
+    [parameter(Mandatory=$false)]
+    [bool]
+    $Success = $false,
+    [parameter(Mandatory=$false)]
+    [string]
+    $MacAddress = $false,
+    [parameter(Mandatory=$false)]
+    [string]
+    $Token = $false
+  )
+
+  $payload = if($Initial){
+    @{
+      "mac"   = $MacAddress
+      "token" = $Token
     }
-    Add-Content -Path $logFile -Value $data
+  }else{
+    @{
+      "mac"   = $mac
+      "result" = $Success
+    }
+  }
+
+  # Let CP4 know the status of the autoinstall
+  try{
+    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $($payload | ConvertTo-Json) -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/autoinstall" -Method Post -Body $payload -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
+  }catch{
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
+    Write-LogMessage -LogType CRITICAL -Message "Exit"
+    throw $_
+  }
+
+  return $data
 }
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
-
 # Stop cp4worker that was installed in the build
 Get-Service cp4worker -Erroraction SilenlyContinue | Stop-Service
 
@@ -89,22 +128,9 @@ $mac = $NetworkInfo.MAC.tostring()
 
 Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $APIHost (POST: systems/autoinstall)"
-
-$payload = @{
-  "mac"   = $mac
-  "token" = $queueToken
-} | ConvertTo-Json
-
 Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $($payload.mac) and secret token"
 
-try{
-    Write-LogMessage -LogType INFO -Message "Execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-    $data = Invoke-RestMethod -Uri "https://$APIHost/v1/systems/autoinstall" -Method Post -Body $payload -UserAgent "L27Bootstrap/0.1" -ContentType "application/json"
-}catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Failed to execute Invoke-RestMethod -Uri `"https://$APIHost/v1/systems/autoinstall`" -Method Post -Body $payload -UserAgent `"L27Bootstrap/0.1`" -ContentType `"application/json`""
-    Write-LogMessage -LogType CRITICAL -Message "Exit"
-    throw $_
-}
+$data = Send-AutoinstallFeedback -Initial -MacAddress $mac -Token $token
 
 Write-LogMessage -LogType INFO -Message "Result: $($data)"
 
@@ -121,14 +147,16 @@ if ( $installed ){
 }else{
   Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
   try{
-      . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 16.7
-      Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
+    . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 16.7
+    Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
   }catch{
-      Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
-      Write-LogMessage -LogType CRITICAL -Message "Exit"
-      throw $_
+    Send-AutoinstallFeedback -MacAddress $mac -Success $false
+    Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
+    Write-LogMessage -LogType CRITICAL -Message "Exit"
+    throw $_
   }
 }
+
 #setup chef
 New-Item C:\Chef\client.pem -Value $chefClientKey -ItemType File -Force
 
@@ -154,9 +182,10 @@ Start-Sleep -Seconds 2
 try{
     & C:\opscode\chef\bin\chef-client.bat -j C:\chef\firstboot.json -o l27wcp4
 }catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef run failed"
-    Write-LogMessage -LogType CRITICAL -Message "Exit"
-    throw $_
+  Send-AutoinstallFeedback -MacAddress $mac -Success $false
+  Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef run failed"
+  Write-LogMessage -LogType CRITICAL -Message "Exit"
+  throw $_
 }
 
 Write-LogMessage -ToUser -LogType INFO -Message "Waiting for CP4Worker to start"
@@ -166,5 +195,9 @@ while ((Get-Service 'CP4Worker').status -ne "Running"){
 }
 
 Write-LogMessage -ToUser -LogType INFO -Message "CP4Worker running"
-
 Start-Sleep -Seconds 10
+Write-LogMessage -ToUser -LogType INFO -Message "Let CP4 know we are ready"
+
+Send-AutoinstallFeedback -MacAddress $mac -Success $true
+
+Write-LogMessage -ToUser -LogType INFO -Message "Bootstrap finished"
