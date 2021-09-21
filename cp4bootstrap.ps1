@@ -188,9 +188,5 @@ while ((Get-Service 'CP4Worker').status -ne "Running"){
 }
 
 Write-LogMessage -ToUser -LogType INFO -Message "CP4Worker running"
-Start-Sleep -Seconds 10
-Write-LogMessage -ToUser -LogType INFO -Message "Let CP4 know we are ready"
-
-Send-AutoinstallFeedback -MacAddress $mac -Success $true -Token $queueToken
-
 Write-LogMessage -ToUser -LogType INFO -Message "Bootstrap finished"
+Start-Sleep -Seconds 10
