@@ -140,7 +140,7 @@ if ( $installed ){
 }else{
   Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
   try{
-    . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 16.7
+    . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 16.16
     Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
   }catch{
     Send-AutoinstallFeedback -MacAddress $mac -Success $false
