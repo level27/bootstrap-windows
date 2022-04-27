@@ -59,7 +59,7 @@ Function Write-LogMessage{
 
   $time = Get-Date -Format u
   $data = "$time : $LogType - $Message"
-  $logFile = "$($env:TEMP )\cp4bootstrap.log"
+  $logFile = "$($env:WinDir)\temp\cp4bootstrap.log"
 
   if(-not (Test-Path $logFile)){
     New-Item -ItemType File $logFile -Force  | Out-Null
@@ -121,7 +121,7 @@ $mac = $NetworkInfo.MAC.tostring()
 
 Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $APIHost (POST: systems/autoinstall)"
-Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $mac and secret token"
+Write-LogMessage -LogType INFO -Message "Registering with dataset: mac = $mac and secret token $($queueToken)"
 
 $data = Send-AutoinstallFeedback -MacAddress $mac -Token $queueToken -Success $true
 
@@ -180,6 +180,13 @@ try{
   Write-LogMessage -LogType CRITICAL -Message "Exit"
   throw $_
 }
+
+Remove-Item C:\chef\firstboot.json
+
+New-Item C:\L27\CP4\token.ini -ItemType File -Force -Value @"
+[cp4]
+token=$queueToken
+"@ | Out-Null
 
 Write-LogMessage -ToUser -LogType INFO -Message "Waiting for CP4Worker to start"
 while ((Get-Service 'CP4Worker').status -ne "Running"){
