@@ -128,7 +128,7 @@ if($systemStatus -eq "importing"){
     try{
         #install Chef
         Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
-        . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 16.16
+        . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 17
         Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
