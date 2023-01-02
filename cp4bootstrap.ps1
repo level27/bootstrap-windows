@@ -134,13 +134,13 @@ $chefClientKey = $data.chefClientKey
 Start-Sleep -Seconds 3
 
 # Install Chef, if not already installed
-$installed = (Get-WMIObject -Query "SELECT * FROM Win32_Product Where Name Like 'Chef Infra Client v16.7%'").Length -gt 0
+$installed = (Get-WMIObject -Query "SELECT * FROM Win32_Product Where Name Like 'Chef Infra Client%'").Length -gt 0
 if ( $installed ){
   Write-LogMessage -LogType INFO -ToUser -Message "Chef already installed"
 }else{
   Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
   try{
-    . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 17
+    . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 18.0
     Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
   }catch{
     Send-AutoinstallFeedback -MacAddress $mac -Success $false
