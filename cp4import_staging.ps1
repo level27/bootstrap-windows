@@ -115,6 +115,7 @@ if($systemStatus -eq "importing"){
 chef_server_url  "$chefendpoint"
 node_name "$systemUID"
 chef_license 'accept'
+migrate_key_to_keystore false
 "@ | Out-Null
 
     New-Item -Path C:\Chef -Name firstboot.json -ItemType File -Force -Value @"
