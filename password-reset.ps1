@@ -10,7 +10,7 @@ $passAdmin=get-randompass
 $passL27=get-randompass
 
 if ($passL27.length -ne 17 && $passAdmin.length -ne 17){
-  Write-Host "Password length not OK"
+  Write-Output "Password length not OK"
   # something is wrong, abort
   exit 1
 }
@@ -22,20 +22,20 @@ $response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Met
 
 #we only continue if post is OK
 if (response.StatusCode -ne 200){
-  Write-Host "POST not OK"
+  Write-Output "POST not OK"
   # something is wrong, abort
   exit 1
 }
 
-Write-Host "New L27 user"
+Write-Output "New L27 user"
 # Create a new Admin user for emergencies
 $pass=$passL27 | ConvertTo-SecureString -AsPlainText -Force
 New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires
 Add-LocalGroupMember -Group Administrators -Member level27
 
-Write-Host "Set Administrator user"
+Write-Output "Set Administrator user"
 # Set new Administrator password
 $pass=$passAdmin | ConvertTo-SecureString -AsPlainText -Force
 Set-LocalUser -Name Administrator -Password $pass
 
-Write-Host "Done"
+Write-Output "Done"
