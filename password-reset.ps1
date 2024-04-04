@@ -3,11 +3,11 @@ $passAdmin=(New-Object System.Net.WebClient).DownloadString("https://win-pw.leve
 
 try
 {
-    $Response=(Invoke-WebRequest "https://win-pw.level27.eu/rnd.php").content
+    $Response=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php").content
     # This will only execute if the Invoke-WebRequest is successful.
     $StatusCode = $Response.StatusCode
 } catch {
-    $_.Exception
+  Write-Output $_.Exception
 }
 $StatusCode
 
