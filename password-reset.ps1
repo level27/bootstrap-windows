@@ -10,6 +10,7 @@ $passAdmin=get-randompass
 $passL27=get-randompass
 
 if ($passL27.length -ne 17 && $passAdmin.length -ne 17){
+  Write-Host "Password length not OK"
   # something is wrong, abort
   exit 1
 }
@@ -21,6 +22,7 @@ $response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Met
 
 #we only continue if post is OK
 if (response.StatusCode -ne 200){
+  Write-Host "POST not OK"
   # something is wrong, abort
   exit 1
 }
