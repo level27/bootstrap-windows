@@ -5,6 +5,8 @@ function get-randompass {
   }
 }
 
+Write-Output "Start Script"
+
 $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
 $passAdmin=get-randompass
 $passL27=get-randompass
