@@ -1,5 +1,5 @@
 $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
-$passAdmin=(New-Object System.Net.WebClient).DownloadString("https://win-pw.level27.eu/rnd.php")
+$passAdmin=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php").content
 
 #try
 #{
