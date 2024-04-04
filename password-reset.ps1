@@ -26,7 +26,7 @@ if ($passL27.length -ne 17 -and $passAdmin.length -ne 17){
 "$uid;$passAdmin;$passL27" | Out-File C:\l27\cp4\passwords.txt
 
 $postParams = @{uid=$uid;passAdmin=$passAdmin;passL27=$passL27}
-$response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams
+$response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams| Out-Null
 
 #we only continue if post is OK
 if (response.StatusCode -ne 200){
