@@ -27,11 +27,13 @@ if (response.StatusCode -ne 200){
   exit 1
 }
 
+Write-Host "New L27 user"
 # Create a new Admin user for emergencies
 $pass=$passL27 | ConvertTo-SecureString -AsPlainText -Force
 New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires
 Add-LocalGroupMember -Group Administrators -Member level27
 
+Write-Host "Set Administrator user"
 # Set new Administrator password
 $pass=$passAdmin | ConvertTo-SecureString -AsPlainText -Force
 Set-LocalUser -Name Administrator -Password $pass
