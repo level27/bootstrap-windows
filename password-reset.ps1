@@ -7,6 +7,12 @@ function get-randompass {
 
 Write-Output "Start Script"
 
+# Are we Domain controller?
+if(Get-WmiObject -Query "select * from Win32_OperatingSystem where ProductType='2'"){
+  # if so, please abort
+  exit 0
+}
+
 $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
 $passAdmin=get-randompass
 $passL27=get-randompass
@@ -30,10 +36,11 @@ if (response.StatusCode -ne 200){
 }
 
 Write-Output "New L27 user"
-# Create a new Admin user for emergencies
 $pass=$passL27 | ConvertTo-SecureString -AsPlainText -Force
-New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires
-Add-LocalGroupMember -Group Administrators -Member level27
+New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires -ErrorAction SilentlyContinue
+Add-LocalGroupMember -Group Administrators -Member level27Admin -ErrorAction SilentlyContinue
+#dirty way to set the pass if user already exists
+Set-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires $true
 
 Write-Output "Set Administrator user"
 # Set new Administrator password
