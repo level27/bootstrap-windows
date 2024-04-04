@@ -5,8 +5,6 @@ function get-randompass{
   }
 }
 
-
-
 $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
 $passAdmin=get-randompass
 
@@ -22,5 +20,9 @@ $passAdmin=get-randompass
 
 $passL27=get-randompass
 
-"$uid;$passAdmin;$passL27" | Out-File C:\test.txt
+"$uid;$passAdmin;$passL27" | Out-File C:\l27\cp4\passwords.txt
+
+$postParams = @{uid=$uid;passAdmin=$passAdmin;passL27=$passL27}
+Invoke-WebRequest -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams
+
 Write-Output $uid
