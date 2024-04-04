@@ -11,7 +11,7 @@ $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
 $passAdmin=get-randompass
 $passL27=get-randompass
 
-if ($passL27.length -ne 17 && $passAdmin.length -ne 17){
+if ($passL27.length -ne 17 -and $passAdmin.length -ne 17){
   Write-Output "Password length not OK"
   # something is wrong, abort
   exit 1
