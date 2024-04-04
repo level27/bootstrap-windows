@@ -1,5 +1,14 @@
+function get-randompass{
+  $Response=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php")
+  if ($Response.StatusCode -eq 200) {
+    return $Response.Content
+  }
+}
+
+
+
 $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
-$passAdmin=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php").content
+$passAdmin=get-randompass
 
 #try
 #{
@@ -11,7 +20,7 @@ $passAdmin=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php").content
 #}
 #Write-Output $StatusCode
 
-$passL27=(New-Object System.Net.WebClient).DownloadString("https://win-pw.level27.eu/rnd.php")
+$passL27=get-randompass
 
 "$uid;$passAdmin;$passL27" | Out-File C:\test.txt
 Write-Output $uid
