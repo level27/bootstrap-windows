@@ -1,4 +1,4 @@
-function get-randompass{
+function get-randompass {
   $Response=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php")
   if ($Response.StatusCode -eq 200) {
     return $Response.Content
@@ -7,27 +7,31 @@ function get-randompass{
 
 $uid=((cat C:\l27\cp4\system.ini | Select-String uid) -split('='))[1]
 $passAdmin=get-randompass
-
-#try
-#{
-#    $Response=(Invoke-WebRequest -useb "https://win-pw.level27.eu/rnd.php").content
-#    # This will only execute if the Invoke-WebRequest is successful.
-#    $StatusCode = $Response.StatusCode
-#} catch {
-#    Write-Output $_.Exception
-#}
-#Write-Output $StatusCode
-
 $passL27=get-randompass
+
+if ($passL27.length -ne 17 && $passAdmin.length -ne 17){
+  # something is wrong, abort
+  exit 1
+}
 
 "$uid;$passAdmin;$passL27" | Out-File C:\l27\cp4\passwords.txt
 
 $postParams = @{uid=$uid;passAdmin=$passAdmin;passL27=$passL27}
-try
-{
-  Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams
-} catch {
-  Write-Output $_.Exception
+$response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams
+
+#we only continue if post is OK
+if (response.StatusCode -ne 200){
+  # something is wrong, abort
+  exit 1
 }
 
-Write-Output $uid
+# Create a new Admin user for emergencies
+$pass=$passL27 | ConvertTo-SecureString -AsPlainText -Force
+New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires
+Add-LocalGroupMember -Group Administrators -Member level27
+
+# Set new Administrator password
+$pass=$passAdmin | ConvertTo-SecureString -AsPlainText -Force
+Set-LocalUser -Name Administrator -Password $pass
+
+Write-Host "Done"
