@@ -4,3 +4,4 @@ $passL27=(Invoke-WebRequest https://win-pw.level27.eu/rnd.php).content
 
 "$uid;$passAdmin;$passL27" | Out-File C:\test.txt
 Write-Output $uid
+Write-Output $passAdmin
