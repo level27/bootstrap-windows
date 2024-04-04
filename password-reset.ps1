@@ -35,11 +35,13 @@ if (response.StatusCode -ne 200){
   exit 1
 }
 
-Write-Output "New L27 user"
+
 $pass=$passL27 | ConvertTo-SecureString -AsPlainText -Force
 if(Get-localuser -name level27admin){
+  Write-Output "Modify L27 user"
   Set-LocalUser -Name level27Admin -Password $pass
 } else {
+  Write-Output "New L27 user"
   New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires
   Add-LocalGroupMember -Group Administrators -Member level27Admin
 }
