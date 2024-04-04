@@ -37,10 +37,12 @@ if (response.StatusCode -ne 200){
 
 Write-Output "New L27 user"
 $pass=$passL27 | ConvertTo-SecureString -AsPlainText -Force
-New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires -ErrorAction SilentlyContinue
-Add-LocalGroupMember -Group Administrators -Member level27Admin -ErrorAction SilentlyContinue
-#dirty way to set the pass if user already exists
-Set-LocalUser -Name level27Admin -Password $pass
+if(Get-localuser -name level27admin){
+  Set-LocalUser -Name level27Admin -Password $pass
+} else {
+  New-LocalUser -Name level27Admin -Password $pass -AccountNeverExpires
+  Add-LocalGroupMember -Group Administrators -Member level27Admin
+}
 
 Write-Output "Set Administrator user"
 # Set new Administrator password
