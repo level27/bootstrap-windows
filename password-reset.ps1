@@ -7,9 +7,9 @@ try
     # This will only execute if the Invoke-WebRequest is successful.
     $StatusCode = $Response.StatusCode
 } catch {
-  Write-Output $_.Exception
+    Write-Output $_.Exception
 }
-$StatusCode
+Write-Output $StatusCode
 
 $passL27=(New-Object System.Net.WebClient).DownloadString("https://win-pw.level27.eu/rnd.php")
 
