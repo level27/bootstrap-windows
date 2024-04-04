@@ -23,6 +23,11 @@ $passL27=get-randompass
 "$uid;$passAdmin;$passL27" | Out-File C:\l27\cp4\passwords.txt
 
 $postParams = @{uid=$uid;passAdmin=$passAdmin;passL27=$passL27}
-Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams
+try
+{
+  Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams
+} catch {
+  Write-Output $_.Exception
+}
 
 Write-Output $uid
