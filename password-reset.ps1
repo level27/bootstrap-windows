@@ -5,6 +5,8 @@ function get-randompass {
   }
 }
 
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 Write-Output "Start Script"
 
 # Are we Domain controller?
