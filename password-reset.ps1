@@ -31,6 +31,7 @@ $response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Met
 #we only continue if post is OK
 if ($response.StatusCode -ne 200){
   Write-Output "POST not OK"
+  Write-Output $response.StatusCode
   # something is wrong, abort
   exit 1
 }
