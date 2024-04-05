@@ -29,7 +29,7 @@ $postParams = @{uid=$uid;passAdmin=$passAdmin;passL27=$passL27}
 $response = Invoke-WebRequest -useb -Uri https://win-pw.level27.eu/post.php -Method POST -Body $postParams| Out-Null
 
 #we only continue if post is OK
-if (response.StatusCode -ne 200){
+if ($response.StatusCode -ne 200){
   Write-Output "POST not OK"
   # something is wrong, abort
   exit 1
