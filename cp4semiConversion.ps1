@@ -91,8 +91,8 @@ Write-LogMessage -LogType INFO -Message "Result: $data"
 $chefClientKey = $data.chefClientKey
 $chefQueue = $data.host
 
-# System UID comes from the local machine, not from the API.
-$systemUID = (Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID
+# CP4 creates the chef client and node under the system UID, so it must come from the API.
+$systemUID = $data.uid
 
 # Fetch the FQDN of the (already existing) system for the firstboot config.
 try{
