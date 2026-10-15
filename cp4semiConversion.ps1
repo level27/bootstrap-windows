@@ -47,6 +47,32 @@ $payload = @{
 } | ConvertTo-Json
 $headers = @{"Authorization" = $token}
 
+# Install Chef before converting, so a failed install leaves the system untouched and the script can be rerun
+$installed = (Get-WMIObject -Query "SELECT * FROM Win32_Product Where Name Like 'Chef Infra Client%'").Length -gt 0
+if ( $installed ){
+    Write-LogMessage -LogType INFO -ToUser -Message "Chef already installed"
+}else{
+    Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
+    # Chef's install.ps1 sets [Console]::OutputEncoding, which throws without a console handle; real failures still throw
+    $prevErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try{
+        . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 18.3.0
+    }catch{
+        Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
+        Write-LogMessage -LogType CRITICAL -Message "Exit"
+        throw $_
+    }finally{
+        $ErrorActionPreference = $prevErrorActionPreference
+    }
+    if(-not (Test-Path C:\opscode\chef\bin\chef-client.bat)){
+        Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed: chef-client not found after install"
+        Write-LogMessage -LogType CRITICAL -Message "Exit"
+        throw "Chef install failed"
+    }
+    Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
+}
+
 Write-LogMessage -LogType INFO -ToUser -Message "Doing first call to API..."
 Write-LogMessage -LogType INFO -Message "L27 init $apihost (POST: systems/$systemID/convert/type/kvmguest)"
 
@@ -80,17 +106,6 @@ try{
 $systemFQDN = $systemData.system.fqdn
 
 Write-LogMessage -LogType INFO -ToUser -Message "System is created at Level27, now proceeding with install"
-
-try{
-    #install Chef
-    Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
-    . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 18.3.0
-    Write-LogMessage -LogType INFO -ToUser -Message "Chef install success"
-}catch{
-    Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
-    Write-LogMessage -LogType CRITICAL -Message "Exit"
-    throw $_
-}
 
 #setup chef
 New-Item C:\Chef\client.pem -Value $chefClientKey -ItemType File -Force
