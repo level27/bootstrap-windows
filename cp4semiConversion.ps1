@@ -53,17 +53,16 @@ if ( $installed ){
     Write-LogMessage -LogType INFO -ToUser -Message "Chef already installed"
 }else{
     Write-LogMessage -LogType INFO -ToUser -Message "Chef install started"
-    # Chef's install.ps1 sets [Console]::OutputEncoding, which throws without a console handle; real failures still throw
-    $prevErrorActionPreference = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
     try{
-        . { Invoke-WebRequest -useb https://omnitruck.chef.io/install.ps1 } | Invoke-Expression; install -version 18.3.0
+        # Chef's install.ps1 sets [Console]::OutputEncoding inside its module, which throws "The handle is invalid"
+        # without a console and aborts loading the module (so 'install' is never defined); strip that line
+        $chefInstallScript = (Invoke-WebRequest -UseBasicParsing https://omnitruck.chef.io/install.ps1).Content
+        $chefInstallScript = $chefInstallScript -replace '(?m)^\s*\[Console\]::OutputEncoding\s*=.*$', ''
+        $chefInstallScript | Invoke-Expression; install -version 18.3.0
     }catch{
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed"
         Write-LogMessage -LogType CRITICAL -Message "Exit"
         throw $_
-    }finally{
-        $ErrorActionPreference = $prevErrorActionPreference
     }
     if(-not (Test-Path C:\opscode\chef\bin\chef-client.bat)){
         Write-LogMessage -LogType CRITICAL -ToUser -Message "Chef install failed: chef-client not found after install"
