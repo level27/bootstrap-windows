@@ -161,6 +161,11 @@ auth_key_registry_type 'user'
 }
 "@ | Out-Null
 
+    # Chef only creates these when they are missing, a re-run would keep the system and token of the previous import.
+    # Chef starts the worker again at the end of the run.
+    Stop-Service 'CP4Worker' -ErrorAction SilentlyContinue
+    Remove-Item C:\L27\CP4\system.ini, C:\L27\CP4\token.ini -Force -ErrorAction SilentlyContinue
+
     Write-LogMessage -LogType INFO -ToUser -Message "Starting initial Chef run"
     Start-Sleep -Seconds 2
     try{
